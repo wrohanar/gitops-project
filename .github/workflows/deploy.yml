@@ -19,6 +19,9 @@ jobs:
       with:
         kubectl-version: 'latest'  # Optional: specify kubectl version
 
+    - name: Create .kube directory
+      run: mkdir -p ~/.kube
+
     - name: Set KUBECONFIG environment variable
       run: echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
 
