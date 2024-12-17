@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flux  # This should match the label on the pod template
+  template:
+    metadata:
+      labels:
+        app: flux  # This label must match the selector
+    spec:
+      containers:
+        - name: flux
+          image: fluxcd/flux:latest
+          env:
+            - name: FLUX_FORWARD_NAMESPACE
+              value: "flux-system"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  ports:
+    - port: 3030
+      targetPort: 3030
+  selector:
+    app: flux  # Make sure this matches the label on the Flux pods
