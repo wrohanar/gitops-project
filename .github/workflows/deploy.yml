@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch: # Manual trigger
 
 jobs:
   deploy:
@@ -16,9 +17,12 @@ jobs:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v1
       with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}  # Make sure this secret has the correct kubeconfig
+
+    - name: Verify kubectl connection
+      run: kubectl cluster-info
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f .github/workflows/deploy.yml
-        kubectl apply -f .github/workflows/deploy.yml
+        kubectl apply -f kubernetes/deployment.yaml --validate=false
+        kubectl apply -f kubernetes/service.yaml --validate=false
