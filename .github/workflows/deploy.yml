@@ -1,11 +1,10 @@
 name: Deploy to Kubernetes with ArgoCD and Flux
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
   push:
     branches:
-      - main
-  workflow_dispatch: # Manual trigger
+      - main  # Trigger on push to the main branch
 
 jobs:
   deploy:
@@ -18,7 +17,10 @@ jobs:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v1
       with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}  # Make sure this secret has the correct kubeconfig
+        kubectl-version: 'latest'  # Optional: specify kubectl version
+
+    - name: Set KUBECONFIG environment variable
+      run: echo "${{ secrets.KUBE_CONFIG }}" > ~/.kube/config
 
     - name: Verify kubectl connection
       run: kubectl cluster-info
