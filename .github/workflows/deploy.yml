@@ -11,44 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Configure AWS credentials for ECR access
-    - name: Set up AWS credentials
+    - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # Step 3: Log in to Amazon ECR
-    - name: Docker login to Amazon ECR
-      uses: docker/login-action@v2
-      with:
-        ecr: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        username: AWS
-        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Authenticate with ECR
+      uses: aws-actions/amazon-ecr-login@v1
 
-    # Step 4: Build Docker image
     - name: Build Docker image
       run: docker build -t my-app .
 
-    # Step 5: Push the image to Amazon ECR
     - name: Push Docker image to ECR
       run: |
         docker tag my-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-repo:latest
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-repo:latest
 
-    # Step 6: Set up kubectl for Kubernetes deployment
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
         version: "latest"
         kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
-    # Step 7: Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f kubernetes/deployment.yaml --va
+        kubectl apply -f kubernetes/deployment.yaml --validate=false
+        kubectl apply -f kubernetes/service.yaml --validate=false
