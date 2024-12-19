@@ -47,17 +47,23 @@ jobs:
         docker tag my-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-repo:latest
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/my-repo:latest
 
-    # Step 7: Set up kubectl for Kubernetes deployment
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: "latest"
-        kubeconfig: ${{ secrets.KUBE_CONFIG }}
-
-    # Step 8: Deploy to Kubernetes
-    - name: Deploy to Kubernetes
+    # Step 7: Get the EKS cluster name dynamically
+    - name: Get EKS cluster name
+      id: eks-cluster
       run: |
+        # List all EKS clusters and select the first one if there are multiple
+        CLUSTER_NAME=$(aws eks list-clusters --query "clusters[0]" --output text)
+        echo "EKS_CLUSTER_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
+
+    # Step 8: Set up kubectl for Kubernetes deployment using the dynamically fetched cluster name
+    - name: Set up kubectl
+      run: |
+        aws eks --region ${{ secrets.AWS_REGION }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }}
         kubectl config view  # Debug: Check the kubeconfig
         kubectl cluster-info # Debug: Check if kubectl can connect to the cluster
+
+    # Step 9: Deploy to Kubernetes
+    - name: Deploy to Kubernetes
+      run: |
         kubectl apply -f kubernetes/deployment.yaml --validate=false
         kubectl apply -f kubernetes/service.yaml --validate=false
