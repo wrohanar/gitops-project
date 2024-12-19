@@ -57,5 +57,7 @@ jobs:
     # Step 8: Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
+        kubectl config view  # Debug: Check the kubeconfig
+        kubectl cluster-info # Debug: Check if kubectl can connect to the cluster
         kubectl apply -f kubernetes/deployment.yaml --validate=false
         kubectl apply -f kubernetes/service.yaml --validate=false
